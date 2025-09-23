@@ -305,7 +305,7 @@ export default function SubscriptionFlow() {
       console.log('Connected to store, loading subscription products...');
       // requestProducts is event-based, not promise-based
       // Results will be available through the useIAP hook's subscriptions state
-      fetchProducts({skus: subscriptionIds, type: 'subs'});
+      fetchProducts({skus: subscriptionIds, type: 'all'});
       console.log('Product loading request sent - waiting for results...');
 
       // Load available purchases to check subscription history
@@ -414,7 +414,7 @@ export default function SubscriptionFlow() {
   };
 
   const retryLoadSubscriptions = () => {
-    fetchProducts({skus: SUBSCRIPTION_PRODUCT_IDS, type: 'subs'});
+    fetchProducts({skus: SUBSCRIPTION_PRODUCT_IDS, type: 'all'});
   };
 
   const getSubscriptionDisplayPrice = (

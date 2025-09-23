@@ -10,7 +10,9 @@ export const PRODUCT_IDS: string[] = [
 // Subscription product IDs
 export const SUBSCRIPTION_PRODUCT_IDS: string[] = [
   'com.zinya.sub.premium_monthly',
-  'com.zinya.sub.premium_yearly'
+  'com.zinya.sub.premium_yearly',
+  'com.zinya.sub.vip.monthly',
+  'com.zinya.sub.vip.yearly'
 ];
 
 // Optionally export a single default subscription for convenience
