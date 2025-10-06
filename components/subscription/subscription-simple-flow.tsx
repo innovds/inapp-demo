@@ -1,7 +1,9 @@
-import { useIAP } from 'expo-iap';
 import React, { useEffect } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SUBSCRIPTION_PRODUCT_IDS } from './constants';
+import {
+  useIAPAdapter,
+} from './iap-adapter';
 
 export function SimpleStore() {
   const {
@@ -9,7 +11,7 @@ export function SimpleStore() {
     products,
     fetchProducts,
     requestPurchase,
-  } = useIAP();
+  } = useIAPAdapter();
 
   useEffect(() => {
     if (connected) {

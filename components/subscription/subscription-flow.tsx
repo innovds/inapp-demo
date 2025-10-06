@@ -1,7 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import type { ProductSubscription, Purchase, PurchaseIOS } from 'expo-iap';
-import { requestPurchase, showManageSubscriptionsIOS, useIAP } from 'expo-iap';
 import React, { useCallback, useEffect, useState } from 'react';
+// Import conditionnel via l'adapter pour éviter l'erreur web
 import {
   ActivityIndicator,
   Alert,
@@ -15,6 +15,12 @@ import {
 } from 'react-native';
 import Loading from '../ui/Loading';
 import { SUBSCRIPTION_PRODUCT_IDS } from './constants';
+import {
+  requestPurchaseAdapter,
+  showManageSubscriptionsIOSAdapter,
+  useIAPAdapter
+} from './iap-adapter';
+import { adaptPurchase, adaptSubscription } from './type-adapters';
 
 /**
  * Subscription Flow Example - Subscription Products
@@ -66,7 +72,7 @@ export default function SubscriptionFlow() {
   const [lastPurchase, setLastPurchase] = useState<Purchase | null>(null);
   const [purchaseDetailsVisible, setPurchaseDetailsVisible] = useState(false);
 
-  // Use the useIAP hook for managing subscriptions with built-in subscription status
+  // Use the useIAPAdapter hook for managing subscriptions with built-in subscription status
   const {
     connected,
     subscriptions,
@@ -76,12 +82,12 @@ export default function SubscriptionFlow() {
     finishTransaction,
     getActiveSubscriptions,
     activeSubscriptions,
-  } = useIAP({
+  } = useIAPAdapter({
     onPurchaseSuccess: async (purchase) => {
       // Avoid logging sensitive token in console output
       const {purchaseToken: _omit, ...safePurchase} = purchase as any;
       console.log('Subscription successful:', safePurchase);
-      setLastPurchase(purchase);
+      setLastPurchase(adaptPurchase(purchase));
 
       // Prevent duplicate handling of the same purchase
       if (isHandlingPurchase) {
@@ -98,7 +104,7 @@ export default function SubscriptionFlow() {
 
       if (Platform.OS === 'ios' && purchase.platform === 'ios') {
         // Type-safe access to iOS-specific fields
-        const iosPurchase = purchase as PurchaseIOS;
+        const iosPurchase = adaptPurchase(purchase) as PurchaseIOS;
 
         // Check if purchase was successful based on transaction data
         const hasValidToken = !!(
@@ -158,7 +164,7 @@ export default function SubscriptionFlow() {
           `ℹ️ Subscription restored (${purchase.platform})\n` +
             `Product: ${purchase.productId}\n` +
             `Original Transaction: ${
-              (purchase as PurchaseIOS).originalTransactionIdentifierIOS ||
+              (adaptPurchase(purchase) as PurchaseIOS).originalTransactionIdentifierIOS ||
               'N/A'
             }\n` +
             `No additional charge - existing subscription confirmed`,
@@ -382,15 +388,15 @@ export default function SubscriptionFlow() {
     const subscription = subscriptions.find((sub) => sub.id === itemId);
 
     // Fire-and-forget: requestPurchase is event-based; handle results via hook callbacks
-    if (typeof requestPurchase !== 'function') {
+    if (typeof requestPurchaseAdapter !== 'function') {
       console.warn(
-        '[SubscriptionFlow] requestPurchase missing (test/mock env)',
+        '[SubscriptionFlow] requestPurchaseAdapter missing (test/mock env)',
       );
       setIsProcessing(false);
       setPurchaseResult('Cannot start purchase in test/mock environment.');
       return;
     }
-    void requestPurchase({
+    void requestPurchaseAdapter({
       request: {
         ios: {
           sku: itemId,
@@ -443,7 +449,7 @@ export default function SubscriptionFlow() {
     try {
       if (Platform.OS === 'ios') {
         console.log('Opening subscription management...');
-        await showManageSubscriptionsIOS();
+        await showManageSubscriptionsIOSAdapter();
         console.log('Subscription management opened');
 
         // After returning from subscription management, refresh status
@@ -734,16 +740,16 @@ export default function SubscriptionFlow() {
                 </Text>
                 <View style={styles.subscriptionDetails}>
                   <Text style={styles.subscriptionPrice}>
-                    {getSubscriptionDisplayPrice(subscription)}
+                    {getSubscriptionDisplayPrice(adaptSubscription(subscription))}
                   </Text>
                   <Text style={styles.subscriptionPeriod}>
-                    per {getSubscriptionPeriod(subscription)}
+                    per {getSubscriptionPeriod(adaptSubscription(subscription))}
                   </Text>
                 </View>
-                {getIntroductoryOffer(subscription) ? (
+                {getIntroductoryOffer(adaptSubscription(subscription)) ? (
                   <View style={styles.offerBadge}>
                     <Text style={styles.offerText}>
-                      {getIntroductoryOffer(subscription)}
+                      {getIntroductoryOffer(adaptSubscription(subscription))}
                     </Text>
                   </View>
                 ) : null}
@@ -751,7 +757,7 @@ export default function SubscriptionFlow() {
               <View style={styles.subscriptionActions}>
                 <TouchableOpacity
                   style={styles.infoButton}
-                  onPress={() => handleSubscriptionPress(subscription)}
+                  onPress={() => handleSubscriptionPress(adaptSubscription(subscription))}
                 >
                   <Text style={styles.infoButtonText}>ℹ️</Text>
                 </TouchableOpacity>
@@ -814,7 +820,7 @@ export default function SubscriptionFlow() {
 
       {/* Available Purchases Section */}
       {(() => {
-        const deduplicatedPurchases = deduplicatePurchases(availablePurchases);
+        const deduplicatedPurchases = deduplicatePurchases(availablePurchases.map(adaptPurchase));
         return deduplicatedPurchases.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Available Purchases History</Text>
