@@ -173,3 +173,111 @@ import IAPAdapterTest from './components/subscription/iap-adapter-test';
 - Les imports dynamiques évitent les erreurs de bundling web  
 - Les hooks restent conformes aux règles React (pas d'appels conditionnels)
 - Les mocks reproduisent fidèlement l'API d'expo-iap
+
+---
+
+# Simple Subscription Manager
+
+Un composant React Native simple pour gérer les abonnements avec intégration backend.
+
+## Fonctionnalités
+
+- ✅ Chargement des produits depuis votre backend
+- ✅ Interface utilisateur moderne et responsive
+- ✅ Gestion des achats iOS/Android
+- ✅ Validation côté backend
+- ✅ Gestion des abonnements actifs
+- ✅ Annulation d'abonnements
+- ✅ Support multi-plateforme
+- ✅ Mocks pour le développement
+
+## Utilisation
+
+```tsx
+import SimpleSubscriptionManager from '@/components/subscription/simple-subscription-manager';
+
+export default function SubscriptionScreen() {
+  const handleSubscriptionChanged = (subscription) => {
+    console.log('Subscription changed:', subscription);
+    // Gérer les changements d'abonnement
+  };
+
+  return (
+    <SimpleSubscriptionManager 
+      userId="user_123456" // Optionnel, utilise le mock par défaut
+      onSubscriptionChanged={handleSubscriptionChanged}
+    />
+  );
+}
+```
+
+## Intégration Backend
+
+Le composant est conçu pour s'intégrer avec votre backend Spring Boot. Voir [BACKEND_INTEGRATION.md](./BACKEND_INTEGRATION.md) pour les détails complets.
+
+### APIs requises
+
+1. `GET /api/products/subscriptions` - Liste des produits
+2. `GET /api/users/{userId}/subscription` - Abonnement actif
+3. `POST /api/subscriptions/webhook/purchase` - Validation d'achat
+4. `POST /api/subscriptions/{id}/cancel` - Annulation
+
+### Données transmises au backend lors d'un achat
+
+```json
+{
+  "userId": "user_123456",
+  "productId": "premium_monthly_backend", 
+  "platform": "ios",
+  "originalTransactionId": "1000000123456789",
+  "purchaseToken": "encrypted_token",
+  "transactionDate": 1641024000000,
+  "storeProductId": "com.zinya.sub.premium_monthly"
+}
+```
+
+## Configuration des produits
+
+Les produits sont configurés côté backend avec mapping vers les IDs des stores :
+
+```json
+{
+  "id": "premium_monthly_backend",
+  "name": "Premium Monthly", 
+  "price": 9.99,
+  "currency": "USD",
+  "period": "monthly",
+  "storeProductId": "com.zinya.sub.premium_monthly",
+  "features": ["Feature 1", "Feature 2"]
+}
+```
+
+## Développement
+
+Le composant inclut des mocks pour faciliter le développement sans backend :
+
+- Produits mockés dans `MOCK_BACKEND_PRODUCTS`
+- Utilisateur mocké dans `MOCK_USER`
+- Simulation des appels API avec délais
+
+## Flow d'abonnement
+
+1. **Chargement** : Récupération des produits depuis le backend
+2. **Affichage** : Interface avec plans et prix
+3. **Achat** : Déclenchement du processus d'achat natif
+4. **Validation** : Envoi au backend pour validation et activation
+5. **Confirmation** : Finalisation de la transaction et mise à jour UI
+
+## Gestion des erreurs
+
+- Validation des receipts échouée
+- Problèmes de réseau
+- Abonnements déjà actifs
+- Erreurs de store
+
+## Sécurité
+
+- ✅ Validation côté serveur obligatoire
+- ✅ Tokens sensibles masqués dans les logs
+- ✅ Prévention des doublons d'achat
+- ✅ Finalisation appropriée des transactions

@@ -13,14 +13,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Loading from '../ui/Loading';
-import { SUBSCRIPTION_PRODUCT_IDS } from './constants';
 import {
   requestPurchaseAdapter,
   showManageSubscriptionsIOSAdapter,
   useIAPAdapter
-} from './iap-adapter';
-import { adaptPurchase, adaptSubscription } from './type-adapters';
+} from '../../lib/iap/iap-adapter';
+import Loading from '../ui/Loading';
+import { SUBSCRIPTION_PRODUCT_IDS } from './constants';
+import { adaptPurchase, adaptSubscription } from '../../lib/iap/types';
 
 /**
  * Subscription Flow Example - Subscription Products
@@ -37,7 +37,7 @@ import { adaptPurchase, adaptSubscription } from './type-adapters';
  * - getActiveSubscriptions(['id1', 'id2']) - gets specific subscriptions
  * - activeSubscriptions state - automatically updated subscription list
  */
-
+const userId = 'user-12345';
 export default function SubscriptionFlow() {
   // Deduplicate purchases by productId, keeping the most recent transaction
   const deduplicatePurchases = (purchases: Purchase[]): Purchase[] => {
@@ -400,19 +400,11 @@ export default function SubscriptionFlow() {
       request: {
         ios: {
           sku: itemId,
-          // appAccountToken can be provided in real apps if needed
+          appAccountToken: userId
         },
         android: {
           skus: [itemId],
-          subscriptionOffers:
-            subscription &&
-            'subscriptionOfferDetailsAndroid' in subscription &&
-            subscription.subscriptionOfferDetailsAndroid
-              ? subscription.subscriptionOfferDetailsAndroid.map((offer) => ({
-                  sku: itemId,
-                  offerToken: offer.offerToken,
-                }))
-              : [],
+          obfuscatedAccountIdAndroid: userId
         },
       },
       type: 'subs',
